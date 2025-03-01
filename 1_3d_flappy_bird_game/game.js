@@ -30,6 +30,9 @@ class FlappyBird3D {
             pipeGap: 6  // Increased gap size for easier passage
         };
 
+        this.characterManager = new CharacterManager();
+        this.characterType = 'bird'; // Default character
+
         this.init();
     }
 
@@ -69,32 +72,14 @@ class FlappyBird3D {
     }
 
     createBird() {
-        // Use a box geometry like in flappy3d.html but keep our styling
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshPhongMaterial({ color: 0xFFFF00 }); // Yellow
-        this.bird = new THREE.Mesh(geometry, material);
-        this.bird.position.set(-5, 0, 0); // Position like in flappy3d.html
+        // Remove any existing bird
+        if (this.bird) {
+            this.scene.remove(this.bird);
+        }
 
-        // Add wings
-        const wingGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.6);
-        const wingMaterial = new THREE.MeshPhongMaterial({ color: 0xFFCC00 });
-
-        const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
-        leftWing.position.set(0, 0, -0.6);
-        this.bird.add(leftWing);
-
-        const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
-        rightWing.position.set(0, 0, 0.6);
-        this.bird.add(rightWing);
-
-        // Add beak
-        const beakGeometry = new THREE.ConeGeometry(0.2, 0.5, 8);
-        const beakMaterial = new THREE.MeshPhongMaterial({ color: 0xFF6600 });
-        const beak = new THREE.Mesh(beakGeometry, beakMaterial);
-        beak.position.set(0.7, 0, 0);
-        beak.rotation.z = -Math.PI / 2;
-        this.bird.add(beak);
-
+        // Get the selected character model
+        this.bird = this.characterManager.getCharacterModel(this.characterType);
+        this.bird.position.set(-5, 0, 0);
         this.scene.add(this.bird);
     }
 
@@ -347,5 +332,11 @@ class FlappyBird3D {
 
         this.update();
         this.renderer.render(this.scene, this.camera);
+    }
+
+    // Add a method to set the character
+    setCharacter(type) {
+        this.characterType = type;
+        this.createBird();
     }
 } 

@@ -25,6 +25,31 @@
             </div>
             <button id="restart-button">Play Again</button>
         </div>
+
+        <!-- Character Selection Screen -->
+        <div id="character-select" class="hidden">
+            <h2>Choose Your Character</h2>
+            <div class="character-grid">
+                <div class="character-option" data-character="bird">
+                    <div class="character-preview" id="bird-preview"></div>
+                    <p>Classic Bird</p>
+                </div>
+                <div class="character-option" data-character="bitcoin">
+                    <div class="character-preview" id="bitcoin-preview"></div>
+                    <p>Bitcoin</p>
+                </div>
+                <div class="character-option" data-character="ethereum">
+                    <div class="character-preview" id="ethereum-preview"></div>
+                    <p>Ethereum</p>
+                </div>
+                <div class="character-option" data-character="polygon">
+                    <div class="character-preview" id="polygon-preview"></div>
+                    <p>Polygon</p>
+                </div>
+            </div>
+            <button id="select-character-button">Select</button>
+        </div>
+
         <div id="start-screen">
             <h1>3D Flappy Bird</h1>
             <p>Press SPACE to flap</p>
@@ -34,6 +59,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="highscores.js"></script>
+    <script src="characters.js"></script>
     <script src="game.js"></script>
     <script src="main.js"></script>
 </body>
