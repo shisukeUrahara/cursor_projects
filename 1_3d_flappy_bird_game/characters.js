@@ -76,160 +76,421 @@ class CharacterManager {
 
         switch (type) {
             case 'bird':
-                // Classic yellow bird - more rounded and anatomically correct
+                // Classic yellow bird - enhanced with more details
                 const birdBody = new THREE.Group();
 
-                // Main body - use ellipsoid shape instead of box
-                const bodyGeometry = new THREE.SphereGeometry(0.6, 16, 12);
+                // Main body - smoother with gradient coloring
+                const bodyGeometry = new THREE.SphereGeometry(0.6, 24, 18);
                 const bodyMaterial = new THREE.MeshPhongMaterial({
                     color: 0xFFFF00,
-                    shininess: 30
+                    shininess: 30,
+                    specular: 0x333333
                 });
                 const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-                body.scale.set(1, 0.8, 0.9);
+                body.scale.set(1.1, 0.8, 0.9);
                 birdBody.add(body);
 
-                // Head - slightly smaller sphere
-                const headGeometry = new THREE.SphereGeometry(0.4, 16, 12);
+                // Chest/belly area - slightly different color
+                const bellyGeometry = new THREE.SphereGeometry(0.55, 16, 12);
+                const bellyMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFFF66, // Lighter yellow
+                    shininess: 20
+                });
+                const belly = new THREE.Mesh(bellyGeometry, bellyMaterial);
+                belly.position.set(0.1, -0.1, 0);
+                belly.scale.set(0.9, 0.8, 0.85);
+                birdBody.add(belly);
+
+                // Head - more detailed with smoother transitions
+                const headGeometry = new THREE.SphereGeometry(0.4, 24, 18);
                 const headMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFFF00,
+                    shininess: 30,
+                    specular: 0x333333
+                });
+                const head = new THREE.Mesh(headGeometry, headMaterial);
+                head.position.set(0.55, 0.25, 0);
+                birdBody.add(head);
+
+                // Neck - to connect head and body smoothly
+                const neckGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.2, 16);
+                const neckMaterial = new THREE.MeshPhongMaterial({
                     color: 0xFFFF00,
                     shininess: 30
                 });
-                const head = new THREE.Mesh(headGeometry, headMaterial);
-                head.position.set(0.5, 0.2, 0);
-                birdBody.add(head);
+                const neck = new THREE.Mesh(neckGeometry, neckMaterial);
+                neck.rotation.z = Math.PI / 2.5;
+                neck.position.set(0.3, 0.15, 0);
+                birdBody.add(neck);
 
-                // Wings - curved shape
+                // Wings - more detailed with feather-like structure
+                // Left wing
+                const leftWingGroup = new THREE.Group();
+
+                // Main wing shape
                 const wingShape = new THREE.Shape();
                 wingShape.moveTo(0, 0);
-                wingShape.quadraticCurveTo(0.3, 0.2, 0.6, 0);
-                wingShape.quadraticCurveTo(0.3, -0.3, 0, 0);
+                wingShape.quadraticCurveTo(0.4, 0.3, 0.8, 0);
+                wingShape.quadraticCurveTo(0.4, -0.4, 0, 0);
 
                 const wingGeometry = new THREE.ShapeGeometry(wingShape);
                 const wingMaterial = new THREE.MeshPhongMaterial({
-                    color: 0xFFCC00,
+                    color: 0xFFCC00, // Slightly darker yellow for wings
                     side: THREE.DoubleSide,
-                    shininess: 30
+                    shininess: 20
                 });
 
-                const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
-                leftWing.rotation.y = Math.PI / 2;
-                leftWing.position.set(0, 0, -0.6);
-                birdBody.add(leftWing);
+                const leftWingBase = new THREE.Mesh(wingGeometry, wingMaterial);
+                leftWingBase.rotation.y = Math.PI / 2;
+                leftWingGroup.add(leftWingBase);
 
-                const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
-                rightWing.rotation.y = -Math.PI / 2;
-                rightWing.position.set(0, 0, 0.6);
-                birdBody.add(rightWing);
+                // Add feather details
+                for (let i = 0; i < 5; i++) {
+                    const featherGeometry = new THREE.PlaneGeometry(0.3, 0.08);
+                    const featherMaterial = new THREE.MeshPhongMaterial({
+                        color: 0xFFCC00,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const feather = new THREE.Mesh(featherGeometry, featherMaterial);
+                    feather.position.set(0.1, -0.15 + i * 0.08, 0.05);
+                    feather.rotation.z = -Math.PI / 8;
+                    leftWingGroup.add(feather);
+                }
 
-                // Beak - more triangular
-                const beakGeometry = new THREE.ConeGeometry(0.15, 0.4, 4);
+                leftWingGroup.position.set(0, 0, -0.6);
+                birdBody.add(leftWingGroup);
+
+                // Right wing (mirror of left)
+                const rightWingGroup = leftWingGroup.clone();
+                rightWingGroup.rotation.y = Math.PI;
+                rightWingGroup.position.set(0, 0, 0.6);
+                birdBody.add(rightWingGroup);
+
+                // Beak - more detailed with upper and lower parts
+                const beakGroup = new THREE.Group();
+
+                // Upper beak
+                const upperBeakGeometry = new THREE.ConeGeometry(0.12, 0.35, 4);
                 const beakMaterial = new THREE.MeshPhongMaterial({
                     color: 0xFF6600,
                     shininess: 50
                 });
-                const beak = new THREE.Mesh(beakGeometry, beakMaterial);
-                beak.position.set(0.9, 0.2, 0);
-                beak.rotation.z = -Math.PI / 2;
-                birdBody.add(beak);
+                const upperBeak = new THREE.Mesh(upperBeakGeometry, beakMaterial);
+                upperBeak.rotation.z = -Math.PI / 2;
+                upperBeak.position.set(0, 0.02, 0);
+                beakGroup.add(upperBeak);
 
-                // Eyes
-                const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
-                const eyeMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+                // Lower beak
+                const lowerBeakGeometry = new THREE.ConeGeometry(0.1, 0.25, 4);
+                const lowerBeakMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xE55500, // Slightly darker
+                    shininess: 50
+                });
+                const lowerBeak = new THREE.Mesh(lowerBeakGeometry, lowerBeakMaterial);
+                lowerBeak.rotation.z = -Math.PI / 2;
+                lowerBeak.position.set(0, -0.05, 0);
+                beakGroup.add(lowerBeak);
 
-                const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-                leftEye.position.set(0.7, 0.3, 0.2);
-                birdBody.add(leftEye);
+                beakGroup.position.set(0.95, 0.25, 0);
+                birdBody.add(beakGroup);
 
-                const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-                rightEye.position.set(0.7, 0.3, -0.2);
-                birdBody.add(rightEye);
+                // Eyes - more detailed with pupils and highlights
+                const eyeGroup = new THREE.Group();
 
-                // Tail feathers
-                const tailGeometry = new THREE.BoxGeometry(0.4, 0.1, 0.5);
-                tailGeometry.translate(-0.2, 0, 0);
-                const tailMaterial = new THREE.MeshPhongMaterial({ color: 0xFFCC00 });
-                const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-                tail.position.set(-0.6, 0, 0);
-                birdBody.add(tail);
+                // White of the eye
+                const eyeWhiteGeometry = new THREE.SphereGeometry(0.09, 12, 12);
+                const eyeWhiteMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFFFFF,
+                    shininess: 80
+                });
+
+                // Left eye
+                const leftEyeWhite = new THREE.Mesh(eyeWhiteGeometry, eyeWhiteMaterial);
+                leftEyeWhite.position.set(0.75, 0.35, 0.22);
+                birdBody.add(leftEyeWhite);
+
+                // Left pupil
+                const pupilGeometry = new THREE.SphereGeometry(0.05, 10, 10);
+                const pupilMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x000000,
+                    shininess: 100
+                });
+                const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+                leftPupil.position.set(0.82, 0.35, 0.22);
+                birdBody.add(leftPupil);
+
+                // Left eye highlight
+                const highlightGeometry = new THREE.SphereGeometry(0.02, 8, 8);
+                const highlightMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xFFFFFF
+                });
+                const leftHighlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+                leftHighlight.position.set(0.84, 0.37, 0.24);
+                birdBody.add(leftHighlight);
+
+                // Right eye (mirror of left)
+                const rightEyeWhite = new THREE.Mesh(eyeWhiteGeometry, eyeWhiteMaterial);
+                rightEyeWhite.position.set(0.75, 0.35, -0.22);
+                birdBody.add(rightEyeWhite);
+
+                const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+                rightPupil.position.set(0.82, 0.35, -0.22);
+                birdBody.add(rightPupil);
+
+                const rightHighlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+                rightHighlight.position.set(0.84, 0.37, -0.24);
+                birdBody.add(rightHighlight);
+
+                // Tail feathers - more detailed fan shape
+                const tailGroup = new THREE.Group();
+
+                // Create multiple tail feathers
+                const tailFeatherColors = [0xFFCC00, 0xFFBB00, 0xFFDD00];
+                for (let i = 0; i < 5; i++) {
+                    const featherGeometry = new THREE.PlaneGeometry(0.4, 0.12);
+                    const featherMaterial = new THREE.MeshPhongMaterial({
+                        color: tailFeatherColors[i % 3],
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const feather = new THREE.Mesh(featherGeometry, featherMaterial);
+                    feather.position.set(0, 0, -0.2 + i * 0.1);
+                    feather.rotation.y = (i - 2) * Math.PI / 15;
+                    tailGroup.add(feather);
+                }
+
+                tailGroup.position.set(-0.7, 0, 0);
+                birdBody.add(tailGroup);
+
+                // Feet
+                const footMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFF6600,
+                    shininess: 30
+                });
+
+                // Left foot
+                const leftFootGroup = new THREE.Group();
+
+                const leftLegGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.3, 8);
+                const leftLeg = new THREE.Mesh(leftLegGeometry, footMaterial);
+                leftLeg.position.set(0, -0.15, 0);
+                leftFootGroup.add(leftLeg);
+
+                // Toes
+                for (let i = 0; i < 3; i++) {
+                    const toeGeometry = new THREE.CylinderGeometry(0.02, 0.01, 0.15, 8);
+                    const toe = new THREE.Mesh(toeGeometry, footMaterial);
+                    toe.rotation.x = Math.PI / 2;
+                    toe.rotation.z = (i - 1) * Math.PI / 6;
+                    toe.position.set(0, -0.3, 0);
+                    leftFootGroup.add(toe);
+                }
+
+                leftFootGroup.position.set(0, -0.4, -0.2);
+                birdBody.add(leftFootGroup);
+
+                // Right foot (mirror of left)
+                const rightFootGroup = leftFootGroup.clone();
+                rightFootGroup.position.set(0, -0.4, 0.2);
+                birdBody.add(rightFootGroup);
 
                 model = birdBody;
                 break;
 
             case 'crow':
-                // Black crow with more realistic features
+                // Enhanced black crow with more realistic features
                 const crowBody = new THREE.Group();
 
-                // Main body - sleeker shape
-                const crowBodyGeometry = new THREE.SphereGeometry(0.6, 16, 12);
+                // Main body - sleeker shape with iridescent effect
+                const crowBodyGeometry = new THREE.SphereGeometry(0.6, 24, 18);
                 const crowBodyMaterial = new THREE.MeshPhongMaterial({
                     color: 0x222222,
-                    shininess: 5 // Less shiny for feather-like appearance
+                    shininess: 10,
+                    specular: 0x444444 // Slight iridescence
                 });
                 const crowBodyMesh = new THREE.Mesh(crowBodyGeometry, crowBodyMaterial);
-                crowBodyMesh.scale.set(1.1, 0.7, 0.8);
+                crowBodyMesh.scale.set(1.2, 0.7, 0.8);
                 crowBody.add(crowBodyMesh);
 
-                // Head - slightly more angular
-                const crowHeadGeometry = new THREE.SphereGeometry(0.45, 16, 12);
-                const crowHeadMaterial = new THREE.MeshPhongMaterial({
-                    color: 0x222222,
+                // Neck feathers - ruffled appearance
+                const neckFeathersGeometry = new THREE.SphereGeometry(0.4, 16, 8);
+                const neckFeathersMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x333333,
                     shininess: 5
+                });
+                const neckFeathers = new THREE.Mesh(neckFeathersGeometry, neckFeathersMaterial);
+                neckFeathers.scale.set(0.8, 0.6, 0.7);
+                neckFeathers.position.set(0.3, 0.1, 0);
+                crowBody.add(neckFeathers);
+
+                // Head - more angular and detailed
+                const crowHeadGeometry = new THREE.SphereGeometry(0.45, 24, 18);
+                const crowHeadMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x111111, // Darker than body
+                    shininess: 10,
+                    specular: 0x444444
                 });
                 const crowHead = new THREE.Mesh(crowHeadGeometry, crowHeadMaterial);
                 crowHead.scale.set(0.9, 0.9, 0.8);
-                crowHead.position.set(0.5, 0.25, 0);
+                crowHead.position.set(0.6, 0.3, 0);
                 crowBody.add(crowHead);
 
-                // Beak - sharper and more pointed
-                const crowBeakGeometry = new THREE.ConeGeometry(0.1, 0.5, 4);
+                // Beak - sharper and more pointed with texture
+                const crowBeakGroup = new THREE.Group();
+
+                // Upper beak
+                const crowUpperBeakGeometry = new THREE.ConeGeometry(0.1, 0.5, 4);
                 const crowBeakMaterial = new THREE.MeshPhongMaterial({
                     color: 0x111111,
                     shininess: 30
                 });
-                const crowBeak = new THREE.Mesh(crowBeakGeometry, crowBeakMaterial);
-                crowBeak.position.set(0.95, 0.2, 0);
-                crowBeak.rotation.z = -Math.PI / 2;
-                crowBody.add(crowBeak);
+                const crowUpperBeak = new THREE.Mesh(crowUpperBeakGeometry, crowBeakMaterial);
+                crowUpperBeak.rotation.z = -Math.PI / 2;
+                crowBeakGroup.add(crowUpperBeak);
 
-                // Wings - larger for crow
-                const crowWingGeometry = new THREE.BoxGeometry(0.8, 0.1, 1.2);
-                crowWingGeometry.translate(-0.2, 0, 0);
+                // Lower beak
+                const crowLowerBeakGeometry = new THREE.ConeGeometry(0.08, 0.4, 4);
+                const crowLowerBeak = new THREE.Mesh(crowLowerBeakGeometry, crowBeakMaterial);
+                crowLowerBeak.rotation.z = -Math.PI / 2;
+                crowLowerBeak.position.set(0, -0.05, 0);
+                crowBeakGroup.add(crowLowerBeak);
+
+                crowBeakGroup.position.set(1.05, 0.25, 0);
+                crowBody.add(crowBeakGroup);
+
+                // Wings - more detailed with feather structure
+                // Left wing
+                const crowLeftWingGroup = new THREE.Group();
+
+                // Primary wing shape
+                const crowWingShape = new THREE.Shape();
+                crowWingShape.moveTo(0, 0);
+                crowWingShape.lineTo(0.8, 0.2);
+                crowWingShape.lineTo(1.0, 0);
+                crowWingShape.lineTo(0.8, -0.3);
+                crowWingShape.lineTo(0, 0);
+
+                const crowWingGeometry = new THREE.ShapeGeometry(crowWingShape);
                 const crowWingMaterial = new THREE.MeshPhongMaterial({
                     color: 0x222222,
+                    side: THREE.DoubleSide,
                     shininess: 5
                 });
 
-                const crowLeftWing = new THREE.Mesh(crowWingGeometry, crowWingMaterial);
-                crowLeftWing.position.set(0, 0, -0.6);
-                crowBody.add(crowLeftWing);
+                const crowLeftWingBase = new THREE.Mesh(crowWingGeometry, crowWingMaterial);
+                crowLeftWingBase.rotation.y = Math.PI / 2;
+                crowLeftWingGroup.add(crowLeftWingBase);
 
-                const crowRightWing = new THREE.Mesh(crowWingGeometry, crowWingMaterial);
-                crowRightWing.position.set(0, 0, 0.6);
-                crowBody.add(crowRightWing);
+                // Add primary feathers
+                for (let i = 0; i < 7; i++) {
+                    const featherGeometry = new THREE.PlaneGeometry(0.4, 0.1);
+                    const featherMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x222222,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const feather = new THREE.Mesh(featherGeometry, featherMaterial);
+                    feather.position.set(0.4, -0.2 + i * 0.06, 0.05);
+                    feather.rotation.z = -Math.PI / 10;
+                    crowLeftWingGroup.add(feather);
+                }
 
-                // Eyes - piercing
-                const crowEyeGeometry = new THREE.SphereGeometry(0.07, 8, 8);
+                crowLeftWingGroup.position.set(0, 0, -0.6);
+                crowBody.add(crowLeftWingGroup);
+
+                // Right wing (mirror of left)
+                const crowRightWingGroup = crowLeftWingGroup.clone();
+                crowRightWingGroup.rotation.y = Math.PI;
+                crowRightWingGroup.position.set(0, 0, 0.6);
+                crowBody.add(crowRightWingGroup);
+
+                // Eyes - piercing with detail
+                // Left eye
+                const crowEyeGeometry = new THREE.SphereGeometry(0.08, 16, 16);
                 const crowEyeMaterial = new THREE.MeshPhongMaterial({
-                    color: 0xCCCCCC, // Light gray eyes
+                    color: 0xDDDDDD, // Light gray
                     shininess: 80
                 });
 
                 const crowLeftEye = new THREE.Mesh(crowEyeGeometry, crowEyeMaterial);
-                crowLeftEye.position.set(0.7, 0.35, 0.2);
+                crowLeftEye.position.set(0.8, 0.4, 0.2);
                 crowBody.add(crowLeftEye);
 
+                // Left pupil
+                const crowPupilGeometry = new THREE.SphereGeometry(0.04, 10, 10);
+                const crowPupilMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x000000,
+                    shininess: 100
+                });
+                const crowLeftPupil = new THREE.Mesh(crowPupilGeometry, crowPupilMaterial);
+                crowLeftPupil.position.set(0.85, 0.4, 0.2);
+                crowBody.add(crowLeftPupil);
+
+                // Right eye
                 const crowRightEye = new THREE.Mesh(crowEyeGeometry, crowEyeMaterial);
-                crowRightEye.position.set(0.7, 0.35, -0.2);
+                crowRightEye.position.set(0.8, 0.4, -0.2);
                 crowBody.add(crowRightEye);
 
-                // Tail - fan-shaped
-                const crowTailGeometry = new THREE.BoxGeometry(0.6, 0.1, 0.7);
-                crowTailGeometry.translate(-0.3, 0, 0);
-                const crowTailMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
-                const crowTail = new THREE.Mesh(crowTailGeometry, crowTailMaterial);
-                crowTail.position.set(-0.7, 0, 0);
-                crowBody.add(crowTail);
+                const crowRightPupil = new THREE.Mesh(crowPupilGeometry, crowPupilMaterial);
+                crowRightPupil.position.set(0.85, 0.4, -0.2);
+                crowBody.add(crowRightPupil);
+
+                // Tail - fan-shaped with individual feathers
+                const crowTailGroup = new THREE.Group();
+
+                // Create multiple tail feathers
+                for (let i = 0; i < 7; i++) {
+                    const tailFeatherGeometry = new THREE.PlaneGeometry(0.6, 0.12);
+                    const tailFeatherMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x222222,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const tailFeather = new THREE.Mesh(tailFeatherGeometry, tailFeatherMaterial);
+                    tailFeather.position.set(0, 0, -0.3 + i * 0.1);
+                    tailFeather.rotation.y = (i - 3) * Math.PI / 20;
+                    crowTailGroup.add(tailFeather);
+                }
+
+                crowTailGroup.position.set(-0.7, 0, 0);
+                crowBody.add(crowTailGroup);
+
+                // Feet - scaly texture
+                const crowFootMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x111111,
+                    shininess: 20
+                });
+
+                // Left foot
+                const crowLeftFootGroup = new THREE.Group();
+
+                const crowLeftLegGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.3, 8);
+                const crowLeftLeg = new THREE.Mesh(crowLeftLegGeometry, crowFootMaterial);
+                crowLeftLeg.position.set(0, -0.15, 0);
+                crowLeftFootGroup.add(crowLeftLeg);
+
+                // Toes
+                for (let i = 0; i < 3; i++) {
+                    const crowToeGeometry = new THREE.CylinderGeometry(0.02, 0.01, 0.2, 8);
+                    const crowToe = new THREE.Mesh(crowToeGeometry, crowFootMaterial);
+                    crowToe.rotation.x = Math.PI / 2;
+                    crowToe.rotation.z = (i - 1) * Math.PI / 5;
+                    crowToe.position.set(0, -0.3, 0);
+                    crowLeftFootGroup.add(crowToe);
+                }
+
+                crowLeftFootGroup.position.set(0, -0.4, -0.2);
+                crowBody.add(crowLeftFootGroup);
+
+                // Right foot (mirror of left)
+                const crowRightFootGroup = crowLeftFootGroup.clone();
+                crowRightFootGroup.position.set(0, -0.4, 0.2);
+                crowBody.add(crowRightFootGroup);
 
                 model = crowBody;
                 break;
@@ -457,12 +718,34 @@ class CharacterManager {
         const renderer = this.previewRenderers[type];
         const model = this.characters[type];
 
+        let time = 0;
+
         const animate = () => {
             requestAnimationFrame(animate);
+            time += 0.03;
 
-            // Rotate the model for preview
+            // More lifelike animation for preview
             if (model) {
-                model.rotation.y += 0.01;
+                // Gentle rotation
+                model.rotation.y = Math.sin(time * 0.5) * 0.3 + Math.PI / 4;
+
+                // Slight bobbing motion
+                model.position.y = Math.sin(time) * 0.05;
+
+                // Find and animate wings if they exist
+                model.children.forEach(child => {
+                    // Look for wing groups
+                    if (child.name && child.name.includes('wing')) {
+                        // Flap wings occasionally
+                        if (Math.sin(time * 2) > 0.7) {
+                            if (child.name.includes('left')) {
+                                child.rotation.z = Math.sin(time * 10) * 0.2;
+                            } else if (child.name.includes('right')) {
+                                child.rotation.z = -Math.sin(time * 10) * 0.2;
+                            }
+                        }
+                    }
+                });
             }
 
             renderer.render(scene, camera);
