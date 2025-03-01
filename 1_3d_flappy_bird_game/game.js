@@ -196,11 +196,11 @@ class FlappyBird3D {
         const deltaTime = this.clock.getDelta();
         const elapsedTime = this.clock.getElapsedTime() * 1000; // Convert to milliseconds
 
-        // Apply gravity to bird - using flappy3d.html physics
+        // Apply gravity to bird
         this.birdVelocity += this.gravity;
         this.bird.position.y += this.birdVelocity;
 
-        // Rotate bird based on velocity
+        // Rotate bird based on velocity - all characters are birds now
         this.bird.rotation.z = THREE.MathUtils.clamp(
             -this.birdVelocity * 2,
             -Math.PI / 4,
