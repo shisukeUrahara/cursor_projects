@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Flappy Bird</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <div id="score-display">Score: <span id="score">0</span></div>
+        <div id="game-over" class="hidden">
+            <h2>Game Over</h2>
+            <p>Your score: <span id="final-score">0</span></p>
+            <div id="high-score-input" class="hidden">
+                <p>New High Score!</p>
+                <input type="text" id="player-name" placeholder="Enter your name" maxlength="10">
+                <button id="save-score">Save</button>
+            </div>
+            <div id="high-scores">
+                <h3>High Scores</h3>
+                <ol id="high-scores-list"></ol>
+            </div>
+            <button id="restart-button">Play Again</button>
+        </div>
+        <div id="start-screen">
+            <h1>3D Flappy Bird</h1>
+            <p>Press SPACE to flap</p>
+            <button id="start-button">Start Game</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="highscores.js"></script>
+    <script src="game.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>
