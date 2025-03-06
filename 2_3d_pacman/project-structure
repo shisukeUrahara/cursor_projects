@@ -1,0 +1,14 @@
+/3d-pacman
+  ├── index.html
+  ├── styles.css
+  ├── src/
+  │   ├── main.js
+  │   ├── game/
+  │   │   ├── Game.js
+  │   │   ├── Player.js
+  │   │   ├── Ghost.js
+  │   │   ├── Maze.js
+  │   │   └── Collectible.js
+  │   └── utils/
+  │       ├── Constants.js
+  │       └── MathUtils.js 
