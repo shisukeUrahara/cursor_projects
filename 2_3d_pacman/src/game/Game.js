@@ -28,11 +28,17 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x000000);
 
-        // Improved lighting setup
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Brighter ambient light
+        // Initialize game objects first
+        this.maze = new Maze(MAZE_LAYOUT);
+        this.scene.add(this.maze.mesh);
+
+        this.player = new Player();
+        this.scene.add(this.player.mesh);
+
+        // Setup lighting after player is created
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         this.scene.add(ambientLight);
 
-        // Add multiple directional lights for better visibility
         const createDirectionalLight = (x, y, z, intensity) => {
             const light = new THREE.DirectionalLight(0xffffff, intensity);
             light.position.set(x, y, z);
@@ -40,32 +46,24 @@ export class Game {
             return light;
         };
 
-        // Add lights from different angles
-        createDirectionalLight(0, 20, 10, 0.5);  // Front
-        createDirectionalLight(0, 20, -10, 0.3); // Back
-        createDirectionalLight(10, 20, 0, 0.3);  // Right
-        createDirectionalLight(-10, 20, 0, 0.3); // Left
+        createDirectionalLight(0, 20, 10, 0.5);
+        createDirectionalLight(0, 20, -10, 0.3);
+        createDirectionalLight(10, 20, 0, 0.3);
+        createDirectionalLight(-10, 20, 0, 0.3);
 
-        // Add a subtle point light near Pac-Man for better visibility
+        // Add player light after player is created
         const pointLight = new THREE.PointLight(0xffffaa, 0.5, 10);
         pointLight.position.copy(this.player.mesh.position);
         pointLight.position.y += 2;
         this.scene.add(pointLight);
         this.playerLight = pointLight;
 
-        // Initialize game objects
-        this.maze = new Maze(MAZE_LAYOUT);
-        this.scene.add(this.maze.mesh);
-
-        this.player = new Player();
-        this.scene.add(this.player.mesh);
-
-        // Add ghosts
+        // Add ghosts with doubled positions
         const ghostPositions = [
-            new THREE.Vector3(-5, 0.5, -5),
-            new THREE.Vector3(5, 0.5, -5),
-            new THREE.Vector3(-5, 0.5, 5),
-            new THREE.Vector3(5, 0.5, 5)
+            new THREE.Vector3(-10, 0.5, -10),  // Doubled from -5
+            new THREE.Vector3(10, 0.5, -10),   // Doubled from 5
+            new THREE.Vector3(-10, 0.5, 10),
+            new THREE.Vector3(10, 0.5, 10)
         ];
 
         COLORS.GHOST_COLORS.forEach((color, index) => {
@@ -74,14 +72,14 @@ export class Game {
             this.scene.add(ghost.mesh);
         });
 
-        // Add collectibles
+        // Add collectibles with doubled spacing
         for (let z = 0; z < MAZE_LAYOUT.length; z++) {
             for (let x = 0; x < MAZE_LAYOUT[z].length; x++) {
                 if (MAZE_LAYOUT[z][x] === 0 || MAZE_LAYOUT[z][x] === 2) {
                     const position = new THREE.Vector3(
-                        x - MAZE_LAYOUT[z].length / 2,
+                        (x * 2) - MAZE_LAYOUT[z].length,
                         0.5,
-                        z - MAZE_LAYOUT.length / 2
+                        (z * 2) - MAZE_LAYOUT.length
                     );
                     const type = MAZE_LAYOUT[z][x] === 2 ? 'powerPellet' : 'pellet';
                     const collectible = new Collectible(type, position);
@@ -91,9 +89,11 @@ export class Game {
             }
         }
 
-        // Adjust camera position for better view
-        this.camera.position.set(0, 20, 15);
+        // Adjust camera height for larger maze
+        const mazeHeight = 40; // Increased height to see larger maze
+        this.camera.position.set(0, mazeHeight, 0);
         this.camera.lookAt(0, 0, 0);
+        this.camera.up.set(0, 0, -1);
 
         // Setup event listeners
         window.addEventListener('resize', this.onWindowResize.bind(this));
@@ -109,21 +109,16 @@ export class Game {
         this.player.handleInput(event.key);
     }
 
-    update() {
+    update(deltaTime) {
         if (this.gameOver) return;
 
-        this.player.update();
-
-        // Update ghosts
+        this.player.update(deltaTime);
         this.ghosts.forEach(ghost => ghost.update());
-
-        // Update collectibles
         this.collectibles.forEach(collectible => collectible.update());
 
         this.updateCamera();
         this.checkCollisions();
 
-        // Update player light position
         if (this.playerLight) {
             this.playerLight.position.copy(this.player.mesh.position);
             this.playerLight.position.y += 2;
@@ -131,9 +126,10 @@ export class Game {
     }
 
     updateCamera() {
+        // Follow player from above
         const targetPosition = this.player.mesh.position.clone();
-        targetPosition.y += 20;  // Higher camera position
-        targetPosition.z += 15;  // Further back
+        targetPosition.y = 30; // Keep height constant
+        targetPosition.z = 0;  // Stay centered above player
 
         this.camera.position.lerp(targetPosition, 0.1);
         this.camera.lookAt(this.player.mesh.position);
@@ -229,7 +225,8 @@ export class Game {
 
     animate() {
         requestAnimationFrame(this.animate.bind(this));
-        this.update();
+        const deltaTime = 1 / 60; // Fixed time step
+        this.update(deltaTime);
         this.renderer.render(this.scene, this.camera);
     }
 } 

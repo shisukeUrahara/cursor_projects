@@ -9,25 +9,21 @@ export class Maze {
     }
 
     createMaze() {
-        // Create translucent hedge-like walls
-        const wallGeometry = new THREE.BoxGeometry(1, 4, 1);
+        // Create opaque walls with double size
+        const wallGeometry = new THREE.BoxGeometry(2, 6, 2); // Double width and depth, taller height
         const wallMaterial = new THREE.MeshPhongMaterial({
-            color: COLORS.MAZE,
-            transparent: true, // Enable transparency
-            opacity: 0.6,     // Make walls semi-transparent
+            color: 0x2121de, // Back to original blue
             side: THREE.DoubleSide,
+            transparent: false, // Make walls opaque
             roughness: 0.8,
-            metalness: 0.2,
-            depthWrite: false // Important for proper transparency rendering
+            metalness: 0.2
         });
 
-        // Add floor with texture
-        const floorSize = Math.max(this.layout[0].length, this.layout.length);
+        // Add floor with double size
+        const floorSize = Math.max(this.layout[0].length, this.layout.length) * 2; // Double floor size
         const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
         const floorMaterial = new THREE.MeshPhongMaterial({
-            color: 0x285728,
-            transparent: true,
-            opacity: 0.8,
+            color: 0x333333,
             side: THREE.DoubleSide,
             roughness: 1.0
         });
@@ -37,29 +33,22 @@ export class Maze {
         floor.position.y = 0;
         this.mesh.add(floor);
 
-        // Create walls with better positioning
-        const offsetX = -this.layout[0].length / 2;
-        const offsetZ = -this.layout.length / 2;
+        // Create walls with doubled positioning
+        const offsetX = -this.layout[0].length;  // Double the offset
+        const offsetZ = -this.layout.length;     // Double the offset
 
-        // Create walls
         for (let z = 0; z < this.layout.length; z++) {
             for (let x = 0; x < this.layout[z].length; x++) {
                 if (this.layout[z][x] === 1) {
                     const wall = new THREE.Mesh(wallGeometry, wallMaterial.clone());
                     wall.position.set(
-                        x + offsetX,
-                        2,
-                        z + offsetZ
+                        (x * 2) + offsetX, // Double spacing
+                        3,                 // Half of wall height
+                        (z * 2) + offsetZ  // Double spacing
                     );
-
-                    // Add subtle random rotation for variety
-                    wall.rotation.y = (Math.random() - 0.5) * 0.1;
 
                     this.walls.push(wall);
                     this.mesh.add(wall);
-
-                    // Add edge highlighting for better visibility
-                    this.addWallEdges(wall.position);
                 }
             }
         }
@@ -102,7 +91,7 @@ export class Maze {
     }
 
     checkCollision(position) {
-        const COLLISION_THRESHOLD = 0.8;
+        const COLLISION_THRESHOLD = 1.6; // Increased for larger walls
         let collided = false;
 
         for (const wall of this.walls) {
@@ -111,7 +100,6 @@ export class Maze {
             const distance = Math.sqrt(dx * dx + dz * dz);
 
             if (distance < COLLISION_THRESHOLD) {
-                // Improved collision response
                 const angle = Math.atan2(dz, dx);
                 const pushDistance = COLLISION_THRESHOLD - distance;
 
@@ -121,14 +109,14 @@ export class Maze {
             }
         }
 
-        // Keep within maze bounds
+        // Keep within doubled maze bounds
         const MAZE_BOUNDS = {
-            x: this.layout[0].length / 2,
-            z: this.layout.length / 2
+            x: this.layout[0].length,
+            z: this.layout.length
         };
 
-        position.x = Math.max(-MAZE_BOUNDS.x, Math.min(MAZE_BOUNDS.x, position.x));
-        position.z = Math.max(-MAZE_BOUNDS.z, Math.min(MAZE_BOUNDS.z, position.z));
+        position.x = Math.max(-MAZE_BOUNDS.x * 2, Math.min(MAZE_BOUNDS.x * 2, position.x));
+        position.z = Math.max(-MAZE_BOUNDS.z * 2, Math.min(MAZE_BOUNDS.z * 2, position.z));
 
         return collided;
     }
