@@ -22,10 +22,34 @@ body {
     left: 20px;
     color: white;
     font-family: Arial, sans-serif;
-    font-size: 24px;
+    font-size: 20px;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 16px 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(2px);
 }
 
 #score,
 #lives {
-    margin: 10px;
+    margin-bottom: 12px;
+}
+
+#graphics-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+}
+
+#graphics-toggle {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: none;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+#graphics-toggle option {
+    color: #000;
 }

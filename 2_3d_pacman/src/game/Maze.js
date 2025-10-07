@@ -1,123 +1,166 @@
-import { COLORS } from '../utils/Constants.js';
+import { COLORS, GAME_SETTINGS } from '../utils/Constants.js';
+
+const CELL_SIZE = 2;
+const WALL_SIZE = 1.6;
+const WALL_HALF = WALL_SIZE * 0.5;
+const WALL_HEIGHT = 3.2;
 
 export class Maze {
     constructor(layout) {
         this.layout = layout;
+        this.cellSize = CELL_SIZE;
+        this.wallHalfSize = WALL_HALF;
+
         this.mesh = new THREE.Group();
-        this.walls = [];
-        this.createMaze();
+        this.wallPositions = [];
+        this.openCells = [];
+
+        this.offsetX = -((layout[0].length * CELL_SIZE) / 2) + CELL_SIZE / 2;
+        this.offsetZ = -((layout.length * CELL_SIZE) / 2) + CELL_SIZE / 2;
+
+        this.bounds = {
+            minX: this.offsetX - CELL_SIZE / 2,
+            maxX: this.offsetX + (layout[0].length - 1) * CELL_SIZE + CELL_SIZE / 2,
+            minZ: this.offsetZ - CELL_SIZE / 2,
+            maxZ: this.offsetZ + (layout.length - 1) * CELL_SIZE + CELL_SIZE / 2
+        };
+
+        this.#createFloor();
+        this.#createWalls();
     }
 
-    createMaze() {
-        // Create opaque walls with double size
-        const wallGeometry = new THREE.BoxGeometry(2, 6, 2); // Double width and depth, taller height
-        const wallMaterial = new THREE.MeshPhongMaterial({
-            color: 0x2121de, // Back to original blue
-            side: THREE.DoubleSide,
-            transparent: false, // Make walls opaque
-            roughness: 0.8,
-            metalness: 0.2
-        });
-
-        // Add floor with double size
-        const floorSize = Math.max(this.layout[0].length, this.layout.length) * 2; // Double floor size
-        const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
-        const floorMaterial = new THREE.MeshPhongMaterial({
-            color: 0x333333,
-            side: THREE.DoubleSide,
-            roughness: 1.0
+    #createFloor() {
+        const floorWidth = this.layout[0].length * CELL_SIZE;
+        const floorDepth = this.layout.length * CELL_SIZE;
+        const floorGeometry = new THREE.PlaneGeometry(floorWidth, floorDepth, 1, 1);
+        const floorMaterial = new THREE.MeshLambertMaterial({
+            color: 0x161616
         });
 
         const floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
-        floor.position.y = 0;
+        floor.receiveShadow = false;
         this.mesh.add(floor);
+    }
 
-        // Create walls with doubled positioning
-        const offsetX = -this.layout[0].length;  // Double the offset
-        const offsetZ = -this.layout.length;     // Double the offset
+    #createWalls() {
+        const wallGeometry = new THREE.BoxGeometry(WALL_SIZE, WALL_HEIGHT, WALL_SIZE);
+        wallGeometry.computeBoundingSphere();
+        const wallMaterial = new THREE.MeshLambertMaterial({
+            color: COLORS.MAZE
+        });
 
+        let wallCount = 0;
         for (let z = 0; z < this.layout.length; z++) {
             for (let x = 0; x < this.layout[z].length; x++) {
                 if (this.layout[z][x] === 1) {
-                    const wall = new THREE.Mesh(wallGeometry, wallMaterial.clone());
-                    wall.position.set(
-                        (x * 2) + offsetX, // Double spacing
-                        3,                 // Half of wall height
-                        (z * 2) + offsetZ  // Double spacing
-                    );
-
-                    this.walls.push(wall);
-                    this.mesh.add(wall);
+                    wallCount++;
+                } else {
+                    this.openCells.push({ x, z });
                 }
             }
         }
-    }
 
-    addWallEdges(position) {
-        // Add glowing edges to make walls more visible
-        const edgeGeometry = new THREE.BoxGeometry(1.1, 4.1, 1.1);
-        const edgeMaterial = new THREE.MeshBasicMaterial({
-            color: 0x4444ff,
-            transparent: true,
-            opacity: 0.2,
-            side: THREE.BackSide
-        });
-
-        const edge = new THREE.Mesh(edgeGeometry, edgeMaterial);
-        edge.position.copy(position);
-        this.mesh.add(edge);
-    }
-
-    addHedgeDetails(position) {
-        // Add small leaves or flowers randomly
-        if (Math.random() < 0.3) {
-            const leafGeometry = new THREE.SphereGeometry(0.2, 8, 8);
-            const leafMaterial = new THREE.MeshPhongMaterial({
-                color: 0x50C878, // Emerald green
-                roughness: 1.0
-            });
-            const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
-
-            // Random position on the hedge
-            leaf.position.set(
-                position.x + (Math.random() - 0.5) * 0.5,
-                position.y + (Math.random() - 0.5) * 2,
-                position.z + (Math.random() - 0.5) * 0.5
-            );
-
-            this.mesh.add(leaf);
+        if (wallCount === 0) {
+            return;
         }
-    }
 
-    checkCollision(position) {
-        const COLLISION_THRESHOLD = 1.6; // Increased for larger walls
-        let collided = false;
+        const instancedMesh = new THREE.InstancedMesh(wallGeometry, wallMaterial, wallCount);
+        instancedMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 
-        for (const wall of this.walls) {
-            const dx = position.x - wall.position.x;
-            const dz = position.z - wall.position.z;
-            const distance = Math.sqrt(dx * dx + dz * dz);
+        const matrix = new THREE.Matrix4();
+        const position = new THREE.Vector3();
+        const rotation = new THREE.Quaternion();
+        const scale = new THREE.Vector3(1, 1, 1);
 
-            if (distance < COLLISION_THRESHOLD) {
-                const angle = Math.atan2(dz, dx);
-                const pushDistance = COLLISION_THRESHOLD - distance;
+        let index = 0;
+        for (let z = 0; z < this.layout.length; z++) {
+            for (let x = 0; x < this.layout[z].length; x++) {
+                if (this.layout[z][x] !== 1) {
+                    continue;
+                }
 
-                position.x += Math.cos(angle) * pushDistance;
-                position.z += Math.sin(angle) * pushDistance;
-                collided = true;
+                position.copy(this.gridToWorld(x, z));
+                position.y = WALL_HEIGHT / 2;
+
+                matrix.compose(position, rotation, scale);
+                instancedMesh.setMatrixAt(index, matrix);
+                this.wallPositions.push(position.clone());
+                index++;
             }
         }
 
-        // Keep within doubled maze bounds
-        const MAZE_BOUNDS = {
-            x: this.layout[0].length,
-            z: this.layout.length
-        };
+        instancedMesh.instanceMatrix.needsUpdate = true;
+        this.mesh.add(instancedMesh);
+        this.walls = instancedMesh;
+    }
 
-        position.x = Math.max(-MAZE_BOUNDS.x * 2, Math.min(MAZE_BOUNDS.x * 2, position.x));
-        position.z = Math.max(-MAZE_BOUNDS.z * 2, Math.min(MAZE_BOUNDS.z * 2, position.z));
+    gridToWorld(x, z) {
+        const worldX = this.offsetX + x * CELL_SIZE;
+        const worldZ = this.offsetZ + z * CELL_SIZE;
+        return new THREE.Vector3(worldX, 0, worldZ);
+    }
+
+    worldToGrid(position) {
+        const gridX = Math.round((position.x - this.offsetX) / CELL_SIZE);
+        const gridZ = Math.round((position.z - this.offsetZ) / CELL_SIZE);
+        return { x: gridX, z: gridZ };
+    }
+
+    resolveCollision(position) {
+        const radius = GAME_SETTINGS.PLAYER_RADIUS;
+        let collided = false;
+
+        for (const wallPosition of this.wallPositions) {
+            const dx = position.x - wallPosition.x;
+            const dz = position.z - wallPosition.z;
+
+            if (Math.abs(dx) >= this.wallHalfSize + radius || Math.abs(dz) >= this.wallHalfSize + radius) {
+                continue;
+            }
+
+            const overlapX = this.wallHalfSize + radius - Math.abs(dx);
+            const overlapZ = this.wallHalfSize + radius - Math.abs(dz);
+
+            if (overlapX < overlapZ) {
+                const signX = dx >= 0 ? 1 : -1;
+                position.x += signX * overlapX;
+            } else {
+                const signZ = dz >= 0 ? 1 : -1;
+                position.z += signZ * overlapZ;
+            }
+            collided = true;
+        }
+
+        position.x = Math.min(this.bounds.maxX - radius, Math.max(this.bounds.minX + radius, position.x));
+        position.z = Math.min(this.bounds.maxZ - radius, Math.max(this.bounds.minZ + radius, position.z));
 
         return collided;
     }
-} 
+
+    isWallAt(position, radius = GAME_SETTINGS.PLAYER_RADIUS * 0.9) {
+        for (const wallPosition of this.wallPositions) {
+            const dx = position.x - wallPosition.x;
+            const dz = position.z - wallPosition.z;
+            if (Math.abs(dx) < this.wallHalfSize + radius && Math.abs(dz) < this.wallHalfSize + radius) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    getRandomOpenPosition() {
+        if (this.openCells.length === 0) {
+            return new THREE.Vector3(0, 0, 0);
+        }
+
+        const cell = this.openCells[Math.floor(Math.random() * this.openCells.length)];
+        const position = this.gridToWorld(cell.x, cell.z);
+        position.y = 0.5;
+        return position;
+    }
+
+    getBounds() {
+        return this.bounds;
+    }
+}
