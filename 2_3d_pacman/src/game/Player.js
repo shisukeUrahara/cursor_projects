@@ -7,6 +7,8 @@ export class Player {
         this.direction = new THREE.Vector3(1, 0, 0);
         this.isMoving = false;
         this.mouthAngle = 0;
+        this.tempTarget = new THREE.Vector3();
+        this.tempDirection = new THREE.Vector3();
         this.mesh = this.createMesh();
     }
 
@@ -41,9 +43,7 @@ export class Player {
 
     handleInput(key) {
         const speed = this.speed;
-        this.isMoving = true;
-
-        let newDirection = new THREE.Vector3();
+        const newDirection = this.tempDirection.set(0, 0, 0);
 
         switch (key) {
             case 'ArrowUp':
@@ -62,11 +62,14 @@ export class Player {
             case 'd':
                 newDirection.set(1, 0, 0);
                 break;
+            default:
+                return;
         }
 
         if (newDirection.length() > 0) {
             this.direction.copy(newDirection);
-            this.velocity.copy(newDirection.multiplyScalar(speed));
+            this.velocity.copy(newDirection).multiplyScalar(speed);
+            this.isMoving = true;
 
             // Rotate Pac-Man to face movement direction
             const angle = Math.atan2(this.direction.x, this.direction.z);
@@ -75,29 +78,22 @@ export class Player {
     }
 
     update(deltaTime) {
-        if (this.isMoving) {
-            this.mesh.position.add(this.velocity);
-
-            // Animate mouth
-            this.mouthAngle += deltaTime * 10;
-            const mouthOpen = Math.abs(Math.sin(this.mouthAngle)) * 0.5;
-            this.body.scale.z = 1 - mouthOpen;
-
-            // Update eyes to look in movement direction
-            this.leftEye.lookAt(
-                this.mesh.position.clone().add(this.direction.multiplyScalar(1))
-            );
-            this.rightEye.lookAt(
-                this.mesh.position.clone().add(this.direction.multiplyScalar(1))
-            );
-
-            // Add friction
-            this.velocity.multiplyScalar(0.95);
-            if (this.velocity.length() < 0.01) {
-                this.velocity.set(0, 0, 0);
-                this.isMoving = false;
-            }
+        if (!this.isMoving) {
+            return;
         }
+
+        this.mesh.position.addScaledVector(this.velocity, deltaTime);
+
+        // Animate mouth
+        this.mouthAngle += deltaTime * 6;
+        const mouthOpen = 0.2 + Math.abs(Math.sin(this.mouthAngle)) * 0.35;
+        this.body.scale.set(1, 1, 1);
+        this.body.scale.z = 1 - mouthOpen;
+
+        // Update eyes to look in movement direction
+        this.tempTarget.copy(this.mesh.position).addScaledVector(this.direction, 1.2);
+        this.leftEye.lookAt(this.tempTarget);
+        this.rightEye.lookAt(this.tempTarget);
     }
 
     die() {
