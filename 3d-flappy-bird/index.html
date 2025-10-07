@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Flappy Bird</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;600;700&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="game-container">
+      <div id="canvas-wrapper"></div>
+      <div id="hud">
+        <div id="scoreboard" class="glass-panel">
+          <span class="label">Score</span>
+          <span id="score-value">0</span>
+        </div>
+        <div id="best-score" class="glass-panel hidden">
+          <span class="label">Best</span>
+          <span id="best-score-value">0</span>
+        </div>
+        <button id="sound-toggle" class="icon-button" title="Toggle sound" aria-label="Toggle sound">
+          🔊
+        </button>
+      </div>
+      <div id="overlay" class="glass-panel">
+        <h1>3D Flappy Bird</h1>
+        <p id="overlay-message">Tap, click or press space to flap.</p>
+        <div class="overlay-actions">
+          <button id="start-button" class="primary-button">Start Game</button>
+          <button id="practice-button" class="secondary-button">Free Fly</button>
+        </div>
+        <div class="tips">
+          <p>
+            🕹️ Control the neon bird through gaps between the energy pylons. Build a
+            combo by gliding smoothly and earn extra points for riskier passes.
+          </p>
+          <p>
+            🌈 Switch to <strong>Free Fly</strong> to explore the skyline without
+            pressure, perfect for warming up.
+          </p>
+        </div>
+      </div>
+      <div id="combo-indicator" class="glass-panel hidden"></div>
+      <div id="instructions" class="glass-panel">
+        <span>Controls: Space / Click / Tap to flap · P to pause · M to mute</span>
+      </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
